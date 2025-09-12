@@ -1,0 +1,7 @@
+# Netlify redirects file
+
+# API proxying
+/api/*  https://majdi-ai-assistant.onrender.com/api/:splat  200
+
+# SPA routing - must be last
+/*  /index.html  200
