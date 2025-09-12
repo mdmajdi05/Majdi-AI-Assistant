@@ -10,15 +10,10 @@ const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 
-// CORS for frontend (Next.js) from .env configuration
-const allowedOrigins = process.env.CORS_ORIGINS.split(/\s*,\s*/);
+// CORS for frontend (Next.js)
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) return callback(null, true);
-      return callback(null, true);
-    },
+    origin: '*', // Allow all origins for development
     credentials: false,
   })
 );
