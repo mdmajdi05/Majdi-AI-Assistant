@@ -46,10 +46,10 @@ app.use(express.json());
 app.use(cors({
   origin: function (origin, callback) {
     const allowedOrigins = [
+      'https://majdi-ai-assistant.netlify.app',
       'http://localhost:3000',
-      'http://localhost:3001',
-      'https://majdi-ai-assistant.vercel.app', // Add your production frontend URL
-      'https://majdi-ai-assistant-frontend.onrender.com' // Add other possible URLs
+      'http://localhost:3001', // Add your production frontend URL
+      // // Add other possible URLs
     ];
     
     // Allow requests with no origin (like mobile apps or curl requests)
