@@ -13,7 +13,7 @@ app.use(express.json());
 // CORS for frontend (Next.js)
 app.use(
   cors({
-    origin: '*', // Allow all origins for development
+    origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(", ") : '*', // Use CORS_ORIGINS from .env or allow all if not set
     credentials: false,
   })
 );

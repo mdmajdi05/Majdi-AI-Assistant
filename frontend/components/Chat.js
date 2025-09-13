@@ -7,8 +7,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { speakTextBrowser } from "../utils/ttsLiveBrowser";
+//const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5000"; pehle ye tha
+// Fix API_BASE parsing to handle comma-separated URLs
+//ab yaha se 
+const API_BASE_RAW = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5000";
+const API_BASE = API_BASE_RAW.split(",")[0].trim(); // Use the first URL in the list
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5000";
+//ab yaha tk hai
 
 export default function Chat() {
   const [listening, setListening] = useState(false);
@@ -362,7 +367,7 @@ export default function Chat() {
       console.log("📡 Sending to backend:", text);
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // टाइमआउट को 60 सेकंड तक बढ़ाया गया
       
       const res = await fetch(`${API_BASE}/api/majdi/ask`, {
         method: "POST",
@@ -399,7 +404,12 @@ export default function Chat() {
       playVoiceQueue();
     } catch (err) {
       console.error("Backend error:", err);
-      const errorText = "Majdi ko call karte waqt error aaya.";
+      let errorText = "Majdi ko call karte waqt error aaya.";
+      
+      if (err.name === "AbortError") {
+        errorText = "Connection timeout ho gaya. Kripya internet connection check karein ya thodi der baad try karein.";
+      }
+      
       setChatLog((prev) => [...prev, { sender: "ai", text: errorText }]);
       voiceQueueRef.current.push({
         url: null,
