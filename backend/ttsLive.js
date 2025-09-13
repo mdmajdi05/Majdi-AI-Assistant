@@ -46,60 +46,61 @@ import fs from "fs";
 export function ttsLive(text) {
   return new Promise((resolve, reject) => {
     try {
-      // Cross-platform Python path detection
+      // Cross-platform Python detection
       let pythonCmd;
       
       // Use environment variable if set
       if (process.env.PYTHON_PATH) {
         pythonCmd = process.env.PYTHON_PATH;
       } else {
-        // Determine the correct Python path based on platform
+        // Detect platform and use appropriate Python command
         const isWindows = process.platform === "win32";
-        const venvPath = path.join(process.cwd(), "python_tts", "venv");
-        
-        if (isWindows) {
-          pythonCmd = path.join(venvPath, "Scripts", "python.exe");
-        } else {
-          pythonCmd = path.join(venvPath, "bin", "python");
-        }
-        
-        // Fallback to system Python if virtual environment doesn't exist
-        if (!fs.existsSync(pythonCmd)) {
-          pythonCmd = "python3"; // Use python3 on Linux/Mac
-        }
+        pythonCmd = isWindows ? "python" : "python3";
       }
 
       const script = path.join(process.cwd(), "python_tts", "tts.py");
-      console.log(`Using Python: ${pythonCmd}`);
-      console.log(`Running script: ${script}`);
       
-      const py = spawn(pythonCmd, [script, text], { 
-        windowsHide: true,
-        cwd: process.cwd() // Set current working directory
-      });
+      console.log(`🔧 Using Python: ${pythonCmd}`);
+      console.log(`🔧 Running script: ${script}`);
+      
+      const py = spawn(pythonCmd, [script, text]);
 
       let stdout = "";
       let stderr = "";
 
-      py.stdout.on("data", (data) => { stdout += data.toString(); });
-      py.stderr.on("data", (data) => { stderr += data.toString(); });
+      py.stdout.on("data", (data) => { 
+        stdout += data.toString();
+        console.log(`🐍 Python stdout: ${data.toString()}`);
+      });
+      
+      py.stderr.on("data", (data) => { 
+        stderr += data.toString();
+        console.error(`🐍 Python stderr: ${data.toString()}`);
+      });
 
       py.on("close", (code) => {
+        console.log(`🐍 Python process exited with code ${code}`);
         if (code === 0) {
           const filePath = stdout.trim();
-          if (fs.existsSync(filePath)) resolve(filePath);
-          else reject(new Error(`TTS generated path not found: ${filePath}`));
+          if (fs.existsSync(filePath)) {
+            console.log(`✅ TTS file created: ${filePath}`);
+            resolve(filePath);
+          } else {
+            console.error(`❌ TTS file not found: ${filePath}`);
+            reject(new Error(`TTS generated path not found: ${filePath}`));
+          }
         } else {
+          console.error(`❌ TTS process failed: ${stderr || stdout}`);
           reject(new Error(`Python TTS failed (code ${code}): ${stderr || stdout}`));
         }
       });
 
       py.on("error", (err) => { 
-        console.error("Spawn error:", err);
+        console.error("❌ Spawn error:", err);
         reject(err); 
       });
     } catch (err) {
-      console.error("TTS error:", err);
+      console.error("❌ TTS error:", err);
       reject(err);
     }
   });
