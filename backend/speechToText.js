@@ -109,6 +109,6 @@ Remember: You're talking to a friend, not giving a formal presentation. Be natur
     if (lowerText.includes('how are you') || lowerText.includes('kaise ho')) {
       return "Main bilkul theek hun, aap batao?";
     }
-    return "AI se response nahi aa paaya, kripya dobara koshish karo.";
+    return "Response nahi aa paaya, kripya dobara koshish karo.";
   }
 }
