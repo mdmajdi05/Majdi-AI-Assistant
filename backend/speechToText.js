@@ -1,23 +1,26 @@
+
 import OpenAI from "openai";
 import dotenv from "dotenv";
+import moment from "moment-timezone"; // Added for timezone support
 dotenv.config();
+
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-export async function getAIResponse(userText) {
+// userTimeZone param added, default Asia/Kolkata
+export async function getAIResponse(userText, userTimeZone = "Asia/Kolkata") {
   try {
-    // Get current time for context
-    const currentTime = new Date();
-    const hour = currentTime.getHours();
+    // Get current time for context using user's time zone
+    const now = moment().tz(userTimeZone);
+    const hour = now.hours();
     let timeContext = "";
-    
     if (hour < 12) timeContext = "Good morning! ";
     else if (hour < 17) timeContext = "Good afternoon! ";
     else if (hour < 21) timeContext = "Good evening! ";
     else timeContext = "Good night! ";
 
     // Enhanced system prompt for better responses
-    const systemPrompt = `You are Majdi, a friendly AI assistant who speaks naturally in Hinglish (Hindi + English mix). You're like a helpful friend who understands both languages perfectly.
+    const systemPrompt = `You are Majdi AI, a friendly AI assistant who speaks naturally in Hinglish (Hindi + English mix). You're like a helpful friend who understands both languages perfectly.
 
 Key characteristics:
 - Speak naturally like a real person, not a robot
@@ -37,15 +40,34 @@ Examples of natural responses:
 Remember: You're talking to a friend, not giving a formal presentation. Be natural and conversational.`;
 
     // Handle time-related queries directly without calling API
-    const timeRegex = /(?:time|samay|waqt|abhi kitne baje|kitna baj|time kya|kya time)\b/i;
+    const timeRegex = /(?:time|samay|waqt|abhi kitne baje|kitna baj|time kya|kya time|date|tarikh|din|aaj kon sa din)\b/i;
     if (timeRegex.test(userText.toLowerCase())) {
-      const now = new Date();
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
+      // For time
+      const hours = now.hours();
+      const minutes = now.minutes();
       const ampm = hours >= 12 ? 'PM' : 'AM';
       const hour12 = hours % 12 || 12;
       const timeString = `${hour12}:${minutes < 10 ? '0' + minutes : minutes} ${ampm}`;
-      return `Abhi ${timeString} baj rahe hain.`;
+
+      // For date
+      const day = now.date();
+      const month = now.month() + 1; // month() returns 0-11
+      const year = now.year();
+      const dateString = `${day}/${month}/${year}`;
+
+      // For day of week
+      const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const weekdaysHindi = ['Ravivaar', 'Somvaar', 'Mangalvaar', 'Budhvaar', 'Guruvaar', 'Shukravaar', 'Shanivaar'];
+      const dayOfWeek = weekdays[now.day()];
+      const dayOfWeekHindi = weekdaysHindi[now.day()];
+
+      // Check if query is specifically about date or day
+      if (/(?:date|tarikh|din)\b/i.test(userText.toLowerCase())) {
+        return `Aaj ${dateString} hai, ${dayOfWeekHindi} (${dayOfWeek}) ka din hai.`;
+      }
+
+      // Default to time response
+      return `Abhi exact ${timeString} baj rahe hain. Aaj ${dateString} hai, ${dayOfWeekHindi} ka din hai.`;
     }
 
     // Set timeout for API call to prevent hanging
@@ -82,7 +104,7 @@ Remember: You're talking to a friend, not giving a formal presentation. Be natur
     // Fallback responses for common queries when API fails
     const lowerText = userText.toLowerCase();
     if (lowerText.includes('hello') || lowerText.includes('hi') || lowerText.includes('hey') || lowerText.includes('namaste')) {
-      return "Namaste! Kaise ho aap?";
+      return "Hello! Kaise ho aap?";
     }
     if (lowerText.includes('how are you') || lowerText.includes('kaise ho')) {
       return "Main bilkul theek hun, aap batao?";
